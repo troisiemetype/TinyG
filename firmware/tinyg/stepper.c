@@ -953,7 +953,7 @@ static void _load_move()
 		TIMER_DWELL.CTRLA = STEP_TIMER_ENABLE;			// enable the dwell timer
 
 	// handle synchronous commands
-	} else if (st_pre.move_type == MOVE_TYPE_COMMAND) {
+	} else if (st_pre.move_type == MOVE_TYPE_COMMAND || st_pre.move_type == MOVE_TYPE_SPINDLE_SPEED) {
 		mp_runtime_command(st_pre.bf);
 	}
 
@@ -1082,6 +1082,17 @@ void st_prep_null()
 void st_prep_command(void *bf)
 {
 	st_pre.move_type = MOVE_TYPE_COMMAND;
+	st_pre.bf = (mpBuf_t *)bf;
+	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;	// signal that prep buffer is ready
+}
+
+/*
+ * st_prep_spindle() - Spindle command to execution
+ */
+
+void st_prep_spindle(void *bf)
+{
+	st_pre.move_type = MOVE_TYPE_SPINDLE_SPEED;
 	st_pre.bf = (mpBuf_t *)bf;
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;	// signal that prep buffer is ready
 }

@@ -231,7 +231,7 @@ void mp_queue_spindle(void(*cm_exec)(float[], float[]), float *value, float *fla
 		return;
 	}
 
-	if (laser_mode == 1){								// tests for laser mode.
+	if (laser_mode == true){								// tests for laser mode.
 		bf->move_type = MOVE_TYPE_SPINDLE_SPEED;		// If enable, set the move time as spindle speed: planner doesn't stop motion for spindle change
 	} else {
 		bf->move_type = MOVE_TYPE_COMMAND;				//else set the move type as command: behave the same that mp_queue_command()
@@ -245,7 +245,7 @@ void mp_queue_spindle(void(*cm_exec)(float[], float[]), float *value, float *fla
 		bf->flag_vector[axis] = flag[axis];
 	}
 
-	if(laser_mode ==1){
+	if(laser_mode == true){
 		mp_commit_write_buffer(MOVE_TYPE_SPINDLE_SPEED); 		// call to mp_commit_write_buffer() must be final operation before exit
 	} else {
 		mp_commit_write_buffer(MOVE_TYPE_COMMAND);

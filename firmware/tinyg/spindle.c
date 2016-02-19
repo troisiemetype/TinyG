@@ -91,7 +91,7 @@ float cm_get_spindle_pwm( uint8_t spindle_mode )
 stat_t cm_spindle_control(uint8_t spindle_mode)
 {
 	float value[AXES] = { (float)spindle_mode, 0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_control, value, value);
+	mp_queue_spindle(_exec_spindle_control, value, value);
 	return(STAT_OK);
 }
 
@@ -139,7 +139,7 @@ stat_t cm_set_spindle_speed(float speed)
 //        return (STAT_MAX_SPINDLE_SPEED_EXCEEDED);
 
 	float value[AXES] = { speed, 0,0,0,0,0 };
-	mp_queue_command(_exec_spindle_speed, value, value);
+	mp_queue_spindle(_exec_spindle_speed, value, value);
 	return (STAT_OK);
 }
 
