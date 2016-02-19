@@ -221,6 +221,37 @@ static stat_t _exec_command(mpBuf_t *bf)
 	return (STAT_OK);
 }
 
+void mp_queue_spindle(void(*cm_exec)(float[], float[]), float *value, float *flag)
+{
+	mpBuf_t *bf;
+
+	// Never supposed to fail as buffer availability was checked upstream in the controller
+	if ((bf = mp_get_write_buffer()) == NULL) {
+		cm_hard_alarm(STAT_BUFFER_FULL_FATAL);
+		return;
+	}
+
+	if (laser_mode == 1){								// tests for laser mode.
+		bf->move_type = MOVE_TYPE_SPINDLE_SPEED;		// If enable, set the move time as spindle speed: planner doesn't stop motion for spindle change
+	} else {
+		bf->move_type = MOVE_TYPE_COMMAND;				//else set the move type as command: behave the same that mp_queue_command()
+	}
+
+	bf->bf_func = _exec_command;						// callback to planner queue exec function
+	bf->cm_func = cm_exec;								// callback to canonical machine exec function
+
+	for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+		bf->value_vector[axis] = value[axis];
+		bf->flag_vector[axis] = flag[axis];
+	}
+
+	if(laser_mode ==1){
+		mp_commit_write_buffer(MOVE_TYPE_SPINDLE_SPEED); 		// call to mp_commit_write_buffer() must be final operation before exit
+	} else {
+		mp_commit_write_buffer(MOVE_TYPE_COMMAND);
+	}
+}
+
 stat_t mp_runtime_command(mpBuf_t *bf)
 {
 	bf->cm_func(bf->value_vector, bf->flag_vector);		// 2 vectors used by callbacks
