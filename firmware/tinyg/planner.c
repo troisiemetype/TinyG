@@ -221,6 +221,12 @@ static stat_t _exec_command(mpBuf_t *bf)
 	return (STAT_OK);
 }
 
+/*************************************************************************************
+* mp_sueue_spindle() works the same way as mp_queue_command(), except for the following:
+* 		- bf->move_type = MOVE_TYPE_SPINDLE_SPEED. the move type is of spindle speed type.
+*		- bf->replannabe = true: the spindle block may be take into account for move planning, not as a stop
+*		- bf->entry_vmax, cruise_vmax, exit_vmax are set so the calculation can me made as if it were a line
+*/
 void mp_queue_spindle(void(*cm_exec)(float[], float[]), float *value, float *flag)
 {
 	mpBuf_t *bf;
@@ -231,8 +237,11 @@ void mp_queue_spindle(void(*cm_exec)(float[], float[]), float *value, float *fla
 		return;
 	}
 
-	if (laser_mode == true){								// tests for laser mode.
+	if (cm.laser_mode == true){							// tests for laser mode.
 		bf->move_type = MOVE_TYPE_SPINDLE_SPEED;		// If enable, set the move time as spindle speed: planner doesn't stop motion for spindle change
+		bf->cruise_vmax = 50;							// default value: 300mm/min = 50mm/s
+		bf->exit_vmax = bf->cruise_vmax;				// exit default value = cruise default value
+		bf->replannable = true;							// enables that plan_line.c / _plan_block_list() recalc the values as if spindle changes are moves
 	} else {
 		bf->move_type = MOVE_TYPE_COMMAND;				//else set the move type as command: behave the same that mp_queue_command()
 	}
@@ -245,7 +254,7 @@ void mp_queue_spindle(void(*cm_exec)(float[], float[]), float *value, float *fla
 		bf->flag_vector[axis] = flag[axis];
 	}
 
-	if(laser_mode == true){
+	if(cm.laser_mode == true){
 		mp_commit_write_buffer(MOVE_TYPE_SPINDLE_SPEED); 		// call to mp_commit_write_buffer() must be final operation before exit
 	} else {
 		mp_commit_write_buffer(MOVE_TYPE_COMMAND);
